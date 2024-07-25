@@ -1,5 +1,6 @@
 # system-design
 Designing Data-Intensive Applications Notes
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 ### Reliable
   System should continue to work correctly even when things go wrong due to hardware/software/human errors.
@@ -7,6 +8,8 @@ Designing Data-Intensive Applications Notes
   System should perform well even when load increases.
 ### Maintainable
   System should be simple for new engineers (to make enhancements),ops team (to keep things run smoothly)
+
+__________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 # Database Internals(Write and Read)
 There are two major ways how data is written and read back later.
@@ -39,6 +42,8 @@ Commonly used in databases like Cassandra and LevelDB, LSM Trees are preferred w
 B Trees are preferred when designing database for read heavy support.
 Databases like MySQL and PostgreSQL use B-Trees to provide efficient indexing and query performance. When designing a database that prioritizes read performance, B-Trees are often the preferred choice.
 
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
+
 # Replication
 Database replication is a technique used to maintain multiple copies of data from a database, and keep it updated in real-time. This is crucial for ensuring data availability, improving performance, and protecting against data loss.
 
@@ -61,6 +66,10 @@ Database replication offers several benefits, including:
 
 - **Data protection**: Replication provides a form of backup. If data is lost or corrupted on one server, it can be recovered from another server.
 
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+# Sharding & Partitioning
+
 # Sharding
 Sharding is a database architecture pattern that involves dividing a large database into smaller, more manageable segments, known as *shards*. Each shard contains a subset of the total data and is stored on separate database servers. This division can be based on various criteria, such as geographic location, customer group, or data type.
 
@@ -72,6 +81,7 @@ Sharding is a database architecture pattern that involves dividing a large datab
 ### **Challenges**
 - **Complexity**: Sharding increases the complexity of database management and application logic.
 - **Data Distribution**: Ensuring even data distribution across shards can be challenging.
+
 
 # Partitioning
 Partitioning, on the other hand, refers to dividing a database into smaller parts, but these partitions remain within the same database instance. It’s more about organizing data within a single database server rather than spreading it across multiple servers.
@@ -87,8 +97,9 @@ Partitioning, on the other hand, refers to dividing a database into smaller part
 
 # Sharding vs Partitioning: When to Use Which?
 - **Use Sharding** when dealing with very large databases where scalability and performance across multiple servers are crucial. Ideal for globally distributed applications.
-
 - **Use Partitioning** for improving performance and maintenance within a single server environment, especially when working with large tables.
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
 
                                 
 
