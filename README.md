@@ -11,34 +11,34 @@ Designing Data-Intensive Applications Notes
 # Database Internals(Write and Read)
 There are two major ways how data is written and read back later.
 
-## Write-Ahead Logging (WAL)
+## Write-Ahead Logging (WAL) - Immutable
 Write-Ahead Logging (WAL) is a method used by databases to ensure durability and support crash recovery. Here’s how it works:
 
 - **Durability:** Before modifying data pages on disk, changes are first written to a dedicated log file known as the WAL log. Allways new data is appended at the end of the file.
 - **Sequential Logging:** WAL ensures that changes are sequentially logged before the corresponding data modifications, providing a reliable record of all transactions.
 - **Recovery:** In the event of a crash or system failure, the database can replay the WAL log to restore the database to its last consistent state.
 
-### Use Cases of WAL:
-- **Relational Databases:** Systems like PostgreSQL and MySQL use WAL to maintain data integrity and support ACID (Atomicity, Consistency, Isolation, Durability) properties.
-- **NoSQL Databases:** MongoDB and Cassandra leverage WAL for ensuring durability in distributed environments.
+### Implementation 
+### Log-Structured Trees(LSM Trees):
+LSM Trees is one of the most popular immutable on-disk storage structure which is write efficient since write are done sequentially without modifying the earlier values.
 
-## Update-in-Place Pattern
-
+## Update-in-Place Pattern - Mutable
 Update-in-Place is a strategy where databases directly modify existing data at its original storage location. Key aspects include:
 
 - **Efficiency:** Enables efficient data updates by avoiding the overhead of copying data to new locations.
 - **Direct Modification:** Data modifications (inserts, updates, deletes) are performed directly within the existing data structure, such as B-trees or hash tables.
 - **Transaction Support:** Supports transactional operations where changes are immediately visible and committed once completed.
 
-### Benefits of Update-in-Place:
-- **Performance:** Provides fast access and modification times for frequently updated data.
-- **Simplicity:** Simplifies concurrency control and transaction management by directly manipulating data in place.
+### Implementation
+### B-trees: Used in relational databases for indexing and managing data pages efficiently.
+Unlike LSM Trees, B Trees updates the data in-place which is not as efficient as LSM Trees during writes since it has to perform look up first and before overriding the value.
 
-### Use Cases of Update-in-Place:
-- **B-trees:** Used in relational databases for indexing and managing data pages efficiently.
-- **Hash Indexes:** Employed for fast lookups and updates based on hashed keys in various database systems.
+## Conclusion 
+LSM Trees are preferred when designing database for write heavy support. 
+Commonly used in databases like Cassandra and LevelDB, LSM Trees are preferred when the system needs to handle a high volume of writes efficiently.
+B Trees are preferred when designing database for read heavy support.
+Databases like MySQL and PostgreSQL use B-Trees to provide efficient indexing and query performance. When designing a database that prioritizes read performance, B-Trees are often the preferred choice.
 
-  
 # Replication
 Database replication is a technique used to maintain multiple copies of data from a database, and keep it updated in real-time. This is crucial for ensuring data availability, improving performance, and protecting against data loss.
 
