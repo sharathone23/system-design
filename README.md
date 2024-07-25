@@ -8,38 +8,43 @@ ________________________________________________________________________________
 ### Maintainable
   System should be simple for new engineers (to make enhancements),ops team (to keep things run smoothly)
 
-__________________________________________________________________________________________________________________________________________________________________________________________________________________
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
 
-# Database Internals(Write and Read)
-There are two major ways how data is written and read back later.
+# Database Internals: Write and Read Mechanisms
+
+There are two major ways how data is written and read back later in databases:
+
+1. **Write-Ahead Logging (WAL) - Immutable**
+2. **Update-in-Place Pattern - Mutable**
 
 ## Write-Ahead Logging (WAL) - Immutable
+
 Write-Ahead Logging (WAL) is a method used by databases to ensure durability and support crash recovery. Here’s how it works:
 
-- **Durability:** Before modifying data pages on disk, changes are first written to a dedicated log file known as the WAL log. Allways new data is appended at the end of the file.
-- **Sequential Logging:** WAL ensures that changes are sequentially logged before the corresponding data modifications, providing a reliable record of all transactions.
-- **Recovery:** In the event of a crash or system failure, the database can replay the WAL log to restore the database to its last consistent state.
-
-### Implementation 
-### Log-Structured Trees(LSM Trees):
-LSM Trees is one of the most popular immutable on-disk storage structure which is write efficient since write are done sequentially without modifying the earlier values.
-
-## Update-in-Place Pattern - Mutable
-Update-in-Place is a strategy where databases directly modify existing data at its original storage location. Key aspects include:
-
-- **Efficiency:** Enables efficient data updates by avoiding the overhead of copying data to new locations.
-- **Direct Modification:** Data modifications (inserts, updates, deletes) are performed directly within the existing data structure, such as B-trees or hash tables.
-- **Transaction Support:** Supports transactional operations where changes are immediately visible and committed once completed.
+- **Durability**: Before modifying data pages on disk, changes are first written to a dedicated log file known as the WAL log. New data is always appended at the end of the file.
+- **Sequential Logging**: WAL ensures that changes are sequentially logged before the corresponding data modifications, providing a reliable record of all transactions.
+- **Recovery**: In the event of a crash or system failure, the database can replay the WAL log to restore the database to its last consistent state.
 
 ### Implementation
-### B-trees: Used in relational databases for indexing and managing data pages efficiently.
-Unlike LSM Trees, B Trees updates the data in-place which is not as efficient as LSM Trees during writes since it has to perform look up first and before overriding the value.
 
-## Conclusion 
-LSM Trees are preferred when designing database for write heavy support. 
-Commonly used in databases like Cassandra and LevelDB, LSM Trees are preferred when the system needs to handle a high volume of writes efficiently.
-B Trees are preferred when designing database for read heavy support.
-Databases like MySQL and PostgreSQL use B-Trees to provide efficient indexing and query performance. When designing a database that prioritizes read performance, B-Trees are often the preferred choice.
+- **Log-Structured Merge Trees (LSM Trees)**: LSM Trees are a popular immutable on-disk storage structure that is write-efficient since writes are done sequentially without modifying the earlier values.
+
+## Update-in-Place Pattern - Mutable
+
+Update-in-Place is a strategy where databases directly modify existing data at its original storage location. Key aspects include:
+
+- **Efficiency**: Enables efficient data updates by avoiding the overhead of copying data to new locations.
+- **Direct Modification**: Data modifications (inserts, updates, deletes) are performed directly within the existing data structure, such as B-trees or hash tables.
+- **Transaction Support**: Supports transactional operations where changes are immediately visible and committed once completed.
+
+### Implementation
+
+- **B-trees**: Used in relational databases for indexing and managing data pages efficiently. Unlike LSM Trees, B-Trees update the data in place, which is not as write-efficient since it requires performing lookups before overriding the value.
+
+## Conclusion
+
+- **LSM Trees**: Preferred for databases designed for write-heavy operations. Commonly used in databases like Cassandra and LevelDB, LSM Trees efficiently handle a high volume of writes.
+- **B-Trees**: Preferred for databases designed for read-heavy operations. Used in databases like MySQL and PostgreSQL, B-Trees provide efficient indexing and query performance. When designing a database that prioritizes read performance, B-Trees are often the preferred choice.
 
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
 
