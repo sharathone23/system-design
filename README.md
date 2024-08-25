@@ -128,6 +128,20 @@ Redis core is a key-value dict, values can be strings, numbers, binary blobs, so
 
 4. **Leaderboard**: Using Sorted Set
 5. **Geo Spatial Index** Use case - When you want to search items based on a location. The way this works is while adding an item you should provide the lat and long of the item. While search you should provide the lat and long and it will return the list of items which are in that region.
+  
+  Example: Add few stores first with their location  
+  
+  `GEOADD stores:locations -73.935242 40.730610 "Store 1"`  
+  
+  `GEOADD stores:locations -74.0060 40.7128 "Store 2"`  
+  
+  `GEOADD stores:locations -73.9772 40.7831 "Store 3"`  
+  
+   Find all stores within 5 kilometers of a specific point usually users current location(longitude, latitude):  
+   
+  `GEOSEARCH stores:locations FROMLONLAT -73.935242 40.730610 BYRADIUS 5 km WITHDIST ASC`  
+ 
+
 
 
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
