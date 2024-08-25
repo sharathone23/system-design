@@ -105,6 +105,31 @@ Partitioning, on the other hand, refers to dividing a database into smaller part
 
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
 
-                                
+# Deep Dives
+# Redis
+Redis is popular for cache but it can also be used as durable database. Redis stores all of its data in memory which is the reason for its ligtning fast response times. Apart from database, it can also be used as a distributed lock, leader boards, replacement for kafka(in some instances using Redis Streams).
+
+### Details
+Redis is a single threaded, in memory data structure server. Single Threaded simplifies things a lot from conflicts perspective, as requests are processed in the order they are received.
+Redis core is a key-value dict, values can be strings, numbers, binary blobs, sorted sets, hashes, geo-spatial indexes and bloom filters.
+
+### Use Cases
+1. **Cache**: Use as cache in application layer, where requests are first go to cache, if exists read from cache else go to database and return back data and write to cache.
+   Expiration policy: Use EXPIRE command while setting the value to set TTL(Time to Live)
+   Eviction policy: Least Recently Used(LRU), LFU(Least Frequently used) - in this setup cache is filled until you run out of memory and starts evicting based on the strategy LRU/LFU to free up space
+
+2. **Rate Limiter**: When we want to gaurd a expensive service or external service cannot accepts more than 5 requests per second, in these scenarios we can use Redis as rate limiter, Add an entry with key
+   INCR expensive_service_name_rate_limit (increment a key if exists or sets to 1) and return the latest value
+   if(value is >limit) don't make the call else proceed with call and make sure expire the key after 60 seconds(EXPIRE expensive_service_rate_limit 60 LT) which will remove the key which is similar to setting to zero.
+   this is the most basic setup, but a lot can be customized based on use case like using a window or letting the clients know when they are eligible to send requests again.
+
+3. **Stream**: Redis Streams are ordered list of Items, if we want to process all items in async job queue, it Item is in Stream then it is eventually processed.
+   Stream will have a Consumer Group with the pointer to current Item which is to be processed next. At any given moment only one of the Worker can claim that Item, If worker failes other worker picks up that Item and Pointer is incremented and moved    to next Item in Stream. Worker will continue the heart-beat to let Consumer Group know that its still working, But waht if net work connectivity is lost in between worker and Consumer group, Hence, Redis stream only gaurantees at least once processing but not guarantee exactly once because when network issue, CG can assume the worker failed and assign the same Item to another worker causing in processing the same Item twice.
+
+4. **Leaderboard**: Using Sorted Set
+5. **Geo Spatial Index** Use case - When you want to search items based on a location. The way this works is while adding an item you should provide the lat and long of the item
+
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 
