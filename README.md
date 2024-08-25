@@ -114,36 +114,82 @@ Redis is a single threaded, in memory data structure server. Single Threaded sim
 Redis core is a key-value dict, values can be strings, numbers, binary blobs, sorted sets, hashes, geo-spatial indexes and bloom filters.
 
 ### Use Cases
-1. **Cache**: Use as cache in application layer, where requests are first go to cache, if exists read from cache else go to database and return back data and write to cache.
-   Expiration policy: Use EXPIRE command while setting the value to set TTL(Time to Live)
-   Eviction policy: Least Recently Used(LRU), LFU(Least Frequently used) - in this setup cache is filled until you run out of memory and starts evicting based on the strategy LRU/LFU to free up space
-
-2. **Rate Limiter**: When we want to gaurd a expensive service or external service cannot accepts more than 5 requests per second, in these scenarios we can use Redis as rate limiter, Add an entry with key
-   INCR expensive_service_name_rate_limit (increment a key if exists or sets to 1) and return the latest value
-   if(value is >limit) don't make the call else proceed with call and make sure expire the key after 60 seconds(EXPIRE expensive_service_rate_limit 60 LT) which will remove the key which is similar to setting to zero.
-   this is the most basic setup, but a lot can be customized based on use case like using a window or letting the clients know when they are eligible to send requests again.
-
-3. **Stream**: Redis Streams are ordered list of Items, if we want to process all items in async job queue, it Item is in Stream then it is eventually processed.
-   Stream will have a Consumer Group with the pointer to current Item which is to be processed next. At any given moment only one of the Worker can claim that Item, If worker failes other worker picks up that Item and Pointer is incremented and moved    to next Item in Stream. Worker will continue the heart-beat to let Consumer Group know that its still working, But waht if net work connectivity is lost in between worker and Consumer group, Hence, Redis stream only gaurantees at least once processing but not guarantee exactly once because when network issue, CG can assume the worker failed and assign the same Item to another worker causing in processing the same Item twice.
-
-4. **Leaderboard**: Using Sorted Set
-5. **Geo Spatial Index** Use case - When you want to search items based on a location. The way this works is while adding an item you should provide the lat and long of the item. While search you should provide the lat and long and it will return the list of items which are in that region.
-  
-  Example: Add few stores first with their location  
-  
-  `GEOADD stores:locations -73.935242 40.730610 "Store 1"`  
-  
-  `GEOADD stores:locations -74.0060 40.7128 "Store 2"`  
-  
-  `GEOADD stores:locations -73.9772 40.7831 "Store 3"`  
-  
-   Find all stores within 5 kilometers of a specific point usually users current location(longitude, latitude):  
+1. **Cache**: Use as cache in Application layer, where requests first go to cache, if exists read from cache else go to Database and return back data and write to cache.
    
-  `GEOSEARCH stores:locations FROMLONLAT -73.935242 40.730610 BYRADIUS 5 km WITHDIST ASC`  
+   Cache Expiration (TTL):
+      
+    You can set an expiration time for a key in Redis, after which the key will be automatically deleted. This is known as TTL (Time-To-Live).
+    `EXPIRE key seconds` : Set an expiration time on an existing key.
+
+    Eviction Policies:
+   
+    `noeviction`: Returns errors when the memory limit is reached and new keys are added. No keys are evicted.
+   
+    `allkeys-lru`: Removes the least recently used (LRU) keys among all keys in the database.
+   
+    `allkeys-random`: Removes random keys among all keys in the database.
+   
+    `volatile-lru`: Removes the least recently used (LRU) keys among the keys with an expiration time.
+   
+    `volatile-random`: Removes random keys among the keys with an expiration time.
+   
+    `volatile-ttl`: Removes keys with the shortest remaining TTL among the keys with an expiration time.
+   
+    LRU config:
+   `CONFIG SET maxmemory-policy allkeys-lru`
+
+   Differences(Expiration vs Eviction):
+   
+   Expiration: If a key has a TTL set, it will be removed from Redis once the TTL expires, regardless of the memory usage.
+   
+   Eviction: If Redis reaches its memory limit, it will evict keys according to the configured eviction policy. This may include keys with TTL, but the eviction policy determines which keys are chosen.
+
+2. **Rate Limiter**: When we want to guard a expensive service or when an external service cannot accepts more than 5 requests per second, in these scenarios we can use Redis as rate limiter.
+   Add an entry with key
+   
+   `INCR expensive_service_name_rate_limit` - (increment a key if exists or sets to 1) and return the latest value.
+   
+   if(returnedValue > limit) don't make the call Else proceed with call and make the key expire after 60 seconds by running `EXPIRE` command.
+   `EXPIRE expensive_service_rate_limit 60 LT` Removes the key which is similar to setting it to zero.
+   
+   This is the most basic setup, but a lot can be customized based on use case like using a window or letting the clients know when they are eligible to send requests again.
+
+3. **Stream**: Redis Streams are ordered list of Items.
+   
+    Usecase - if we want to process all items in async job queue, if Item is in Stream then it is eventually processed.
+   
+   Each Stream will have a Consumer Group with the pointer to current Item which is to be processed next. At any given moment only one of the Worker can claim that Item, If worker fails ,other worker picks up that Item and Pointer is incremented and     moved to next Item in Stream. Worker will continue the heart-beat to let Consumer Group know that its still working, But what if there is a network connectivity issue in between worker and Consumer group? Consumer group assumes the worker failed      and assigns the same Item to another worker causing duplicate processing of the same Item. Hence, Redis stream only gaurantees at least once processing/delivery but does not guarantee exactly once processing/delivery.
+
+4. **Leaderboard**: Redis Sorted Sets are collections of unique elements, each associated with a score. The elements are automatically ordered by their score, making Sorted Sets ideal for leaderboards where you need to rank members based on their     
+   scores.
+     
+   Use the ZADD command to add members to a sorted set with their associated scores.
+   
+   `ZADD leaderboard 100 "player1"`
+   
+   `ZADD leaderboard 200 "player2"`
+   
+   `ZADD leaderboard 150 "player3"`
+   
+    To get the top N members, use the ZRANGE command with the WITHSCORES option to include scores in the result:
+   
+   `ZRANGE leaderboard 0 9 WITHSCORES`
+
+5. **Geo Spatial Index** Use case - When you want to search items based on a location. The way this works is while adding an item you should provide the lat and long of the item. While search you should provide the lat and long and it will return the 
+   list of items which are in that region.
+  
+    Example: Add few stores first with their location  
+    
+    `GEOADD stores:locations -73.935242 40.730610 "Store 1"`  
+    
+    `GEOADD stores:locations -74.0060 40.7128 "Store 2"`  
+    
+    `GEOADD stores:locations -73.9772 40.7831 "Store 3"`  
+    
+     Find all stores within 5 kilometers of a specific point usually users current location(longitude, latitude):  
+     
+    `GEOSEARCH stores:locations FROMLONLAT -73.935242 40.730610 BYRADIUS 5 km WITHDIST ASC`  
  
-
-
-
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 
