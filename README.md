@@ -127,7 +127,7 @@ Redis core is a key-value dict, values can be strings, numbers, binary blobs, so
    Stream will have a Consumer Group with the pointer to current Item which is to be processed next. At any given moment only one of the Worker can claim that Item, If worker failes other worker picks up that Item and Pointer is incremented and moved    to next Item in Stream. Worker will continue the heart-beat to let Consumer Group know that its still working, But waht if net work connectivity is lost in between worker and Consumer group, Hence, Redis stream only gaurantees at least once processing but not guarantee exactly once because when network issue, CG can assume the worker failed and assign the same Item to another worker causing in processing the same Item twice.
 
 4. **Leaderboard**: Using Sorted Set
-5. **Geo Spatial Index** Use case - When you want to search items based on a location. The way this works is while adding an item you should provide the lat and long of the item
+5. **Geo Spatial Index** Use case - When you want to search items based on a location. The way this works is while adding an item you should provide the lat and long of the item. While search you should provide the lat and long and it will return the list of items which are in that region.
 
 
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
