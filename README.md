@@ -156,7 +156,7 @@ Redis core is a key-value dict, values can be strings, numbers, binary blobs, so
 
 3. **Stream**: Redis Streams are ordered list of Items.
    
-    Usecase - if we want to process all items in async job queue, if Item is in Stream then it is eventually processed.
+    Usecase - if we want to process all items in async job queue, if Item is in Stream then it is eventually processed(no data loss)
    
    Each Stream will have a Consumer Group with the pointer to current Item which is to be processed next. At any given moment only one of the Worker can claim that Item, If worker fails ,other worker picks up that Item and Pointer is incremented and     moved to next Item in Stream. Worker will continue the heart-beat to let Consumer Group know that its still working, But what if there is a network connectivity issue in between worker and Consumer group? Consumer group assumes the worker failed      and assigns the same Item to another worker causing duplicate processing of the same Item. Hence, Redis stream only gaurantees at least once processing/delivery but does not guarantee exactly once processing/delivery.
 
@@ -188,7 +188,16 @@ Redis core is a key-value dict, values can be strings, numbers, binary blobs, so
     
      Find all stores within 5 kilometers of a specific point usually users current location(longitude, latitude):  
      
-    `GEOSEARCH stores:locations FROMLONLAT -73.935242 40.730610 BYRADIUS 5 km WITHDIST ASC`  
+    `GEOSEARCH stores:locations FROMLONLAT -73.935242 40.730610 BYRADIUS 5 km WITHDIST ASC`
+
+6. **Pub/Sub** : Redis Pub/Sub (Publish/Subscribe) is a messaging pattern supported by Redis that allows for real-time messaging and event notification between different parts of a system. It is useful for applications that need to broadcast messages to multiple subscribers or react to events in real time. (data could be **LOST** if consumer is down)
+   
+   Use Cases:
+   
+   Real-time Notifications.
+   
+   Chat applications with multiple users in a channel.
+   
  
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
 
