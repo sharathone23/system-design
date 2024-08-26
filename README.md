@@ -201,4 +201,42 @@ Redis core is a key-value dict, values can be strings, numbers, binary blobs, so
  
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
 
+# Kafka
+Kafka is a popular event streaming platform and it can be used either as a Message Queue or as a Stream processing system. 
+
+**Key Terminology** (Bottom Up)  
+
+`Offset` A unique identifier for a record within a Kafka partition. Offsets are used to track the position of a consumer in the log and ensure that records are processed in order. Consumers periodically commits offset to kafka because in case of failure or restarts of consumers they can start from where they left off using offset.
+
+`Partition` A partition is a physical single log on disk that stores a portion of the data in a Kafka topic. Each partition is ordered, and messages within a partition are assigned a unique sequential ID called an offset. Its an immutable Append only log file which makes writes fast.  
+
+`Topic` A Topic is a logical grouping of partitions that holds the same type of events.  
+
+`Producer` An application that writes or publishes records (events/messages) to one or more Kafka topics.  
+
+`Consumer` An application that reads or subscribes to records (events/messages) from one or more Kafka topics.  
+
+`Consumer Group` A group of consumers that work together to consume records from a Kafka topic. Each consumer in the group is assigned a partition during startup, No two consumers within the same group read from the same partition at the same time.  
+
+`Broker`  A Kafka server that stores data and serves client requests. Brokers receive records from producers, assign offsets to them, and store them in correct partition on disk. They also serve records to consumers.  
+
+`ZooKeeper` A centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services. Kafka uses ZooKeeper to manage and coordinate the Kafka brokers.  
+
+`Kafka Cluster`  Kafka Cluster is a collection of multiple Kafka brokers that work together to manage the distribution, storage, and processing of data across a distributed system. Each broker within the cluster handles a portion of the data (organized into partitions), and together, they ensure high availability, fault tolerance, and scalability. The cluster allows Kafka to manage large volumes of data by spreading the load across multiple servers, ensuring that the system remains resilient even if individual brokers fail. The Kafka cluster acts as the backbone of the Kafka ecosystem, enabling efficient data streaming and processing in distributed environments.  
+
+`Replication` In order to ensure durability and availability, Kafka replicates partitions using leader and follower mechanism where each partition will have a leader and group of followers(Depends on replication factor). Followers only act as a backup if needed, so events will be processed mainly on leader partition. Kafka ensures partitions for a given topic are spread across different brokers so that when a given broker is down partitions in another broker can still serve the events. (See below image)
+
+![Logo](https://d248djf5mc6iku.cloudfront.net/excalidraw/ad17548cbc6fe72490ecd9a489a42aa3)
+
+
+**Usage**  
+
+**As Message Queue** :
+Kafka can be configured as a message queue when you need to process tasks asynchronously and exactly once. In this setup, you create a single Consumer Group that distributes tasks across multiple worker nodes (consumers), each assigned to different partitions. This ensures that tasks are processed efficiently and only once.
+
+**As Stream** :
+When dealing with events that need to be processed by various consumers, each with a distinct purpose, Kafka functions as a stream processing system. Here, you define multiple Consumer Groups, each tailored to a specific processing task.
+   
+ 
+_________________________________________________________________________________________________________________________________________________________________________________________________________________
 
