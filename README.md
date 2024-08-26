@@ -270,7 +270,11 @@ Relevant Settings:
 
 **What happens if consumer goes down?**  
 
-Consumer uses the last committed offset and starts reading from there after restart.
+**Rebalacing**: Kafka rebalances the partitions accross the active consumers resulting in assigning partition of the failed consumer.  
+
+When a down consumer is back up, Rebalancing occurs again and Consumer uses the last committed offset of the newly assigned partition and starts reading from there.  
+
+**Note**: Kafka does not gaurantee assigning back the same partition during rebalancing when consumer comes back up. Regardless of which partitions the consumer is assigned after restarting, it will begin consuming messages from the last committed offset for each assigned partition.
 
 
 **Errors and Retries**  
