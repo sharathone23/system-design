@@ -224,7 +224,7 @@ Kafka is a popular event streaming platform and it can be used either as a Messa
 
 `Kafka Cluster`  Kafka Cluster is a collection of multiple Kafka brokers that work together to manage the distribution, storage, and processing of data across a distributed system. Each broker within the cluster handles a portion of the data (organized into partitions), and together, they ensure high availability, fault tolerance, and scalability. The cluster allows Kafka to manage large volumes of data by spreading the load across multiple servers, ensuring that the system remains resilient even if individual brokers fail. The Kafka cluster acts as the backbone of the Kafka ecosystem, enabling efficient data streaming and processing in distributed environments.  
 
-`Replication` In order to ensure durability and availability, Kafka replicates partitions using leader and follower mechanism where each partition will have a leader and group of followers(Depends on replication factor). Followers only act as a backup if needed, so events will be processed mainly on leader partition. Kafka ensures partitions for a given topic are spread across different brokers so that when a given broker is down partitions in another broker can still serve the events. (See below image)
+`Replication` In order to ensure durability and availability, Kafka replicates partitions using leader and follower mechanism where each partition will have a leader and group of followers(Depends on replication factor). Followers only act as a backup if needed, so events will be processed mainly on leader partition. Kafka ensures partitions for a given topic are spread across different brokers so that when a given broker is down partitions in another broker can still serve the events. (See below image) *Image credit: [Hello Interview](https://www.hellointerview.com/learn/system-design/deep-dives/kafka)*
 
 ![Logo](https://d248djf5mc6iku.cloudfront.net/excalidraw/ad17548cbc6fe72490ecd9a489a42aa3)
 
@@ -236,6 +236,73 @@ Kafka can be configured as a message queue when you need to process tasks asynch
 
 **As Stream** :
 When dealing with events that need to be processed by various consumers, each with a distinct purpose, Kafka functions as a stream processing system. Here, you define multiple Consumer Groups, each tailored to a specific processing task.
+
+**Deep Dives in System Design Interview**  
+
+**Scalability**  
+
+**Constraints**  
+
+1. Aim for <1MB per message and do not put blob data in message instead upload blob to S3 and put S3 url in the message.  
+
+2. One broker up to 1TB data & 10k messages per second.  (If your use case is less than this then you dont really need to scale)
+
+**How to scale?**  
+
+1. Add More brokers.  
+
+2. Choose a good partition key.  
+
+3. Use managed services like Confluent Cloud Kafka, AWS MSK
+
+**How to handle hot partitions?**  
+
+1. Remove Key (if you dont need ordering, just remove the key and kafka will use round robin to assign poartitions)
+2. Compound Key - key:random_valuewithinrange(1,10) or append userID to key (Again no ordering is supported if you go this route)
+3. Backpressure - Slow down the producer
+
+**Fault tolerance and Durability** (See above image) 
+
+Relevant Settings:  
+
+1. replication factor (3 default)
+2. acks ( acks=all - maximum durability tradeoff here is performance) (acks = 2 slightly less durability but high performance)
+
+**What happens if consumer goes down?**  
+
+Consumer uses the last committed offset and starts reading from there after restart.
+
+
+**Errors and Retries**  
+
+
+`Producer Retries`   
+1. Kafka producer api supports retries to configure the number of retries and wait time when failed to write to kafka topic.
+
+
+`Consumer Retries`  
+
+1. Create a Retry Topic: Establish a separate topic, known as the retry topic, to handle failed events during consumer processing. When an event fails, publish it to this retry topic along with the current retry count.
+   
+2. Process Failed Events: Set up a dedicated consumer to process events from the retry topic. If the retry count is within the defined limit, attempt to reprocess the event. If the event fails again, increment the retry count and republish it to the retry topic. If the retry count exceeds the limit, move the event to a Dead Letter Queue (DLQ) topic for further analysis and troubleshooting. Usually DLQ topics do not have any consumers.
+
+**Performance Optimizations**
+
+1. Batch messages in producer. Send single request with multiple messages
+2. Compress messages in producer using GZIP results in small payload size.
+
+**Retention Policy**
+
+Two main settings  
+
+1. Time-Based Deletion (retention.ms)(default 7 days): If the time limit set by retention.ms is reached before the log size exceeds retention.bytes, Kafka will start deleting the oldest messages based on their age.
+
+2. Size-Based Deletion (retention.bytes)(default 1GB): If the log size reaches the limit set by retention.bytes before the messages reach the age specified by retention.ms, Kafka will begin purging the oldest messages to keep the log within the specified size.
+
+In practice, Kafka will delete messages when either of these conditions is met. This means that messages can be removed either because they are too old or because the log size is too large.
+
+
+
    
  
 _________________________________________________________________________________________________________________________________________________________________________________________________________________
